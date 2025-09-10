@@ -1,97 +1,73 @@
-        // Smooth section fade-in on scroll
-        const sections = document.querySelectorAll('section');
-        const navLinks = document.querySelectorAll('.nav-links a');
+/* -------------------------------
+   Your existing JS code
+--------------------------------- */
+// (Keep everything you already had in index.js above this line)
 
-        function revealSections() {
-            sections.forEach(section => {
-                const rect = section.getBoundingClientRect();
-                if (rect.top < window.innerHeight - 80) {
-                    section.classList.add('visible');
-                }
-            });
-        }
-        window.addEventListener('scroll', revealSections);
-        window.addEventListener('DOMContentLoaded', revealSections);
 
-        // Navigation active link highlight
-        function setActiveNav() {
-            let index = sections.length - 1;
-            for (let i = 0; i < sections.length; i++) {
-                if (window.scrollY + 120 < sections[i].offsetTop) {
-                    index = i - 1;
-                    break;
-                }
-            }
-            navLinks.forEach(link => link.classList.remove('active'));
-            if (index >= 0) navLinks[index].classList.add('active');
-            else navLinks[0].classList.add('active');
-        }
-        window.addEventListener('scroll', setActiveNav);
 
-        // Smooth scroll for nav links
-        navLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    window.scrollTo({
-                        top: target.offsetTop - 60,
-                        behavior: 'smooth'
-                    });
-                }
-            });
-        });
-
-        // Contact form (no backend, just demo)
-        document.querySelector('.contact-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Thank you for reaching out, Eswar will get back to you soon!');
-            this.reset();
-        });
-        // Wait until DOM loads
+/* -------------------------------
+   Added: Smooth scroll + animations
+--------------------------------- */
 document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("contactForm");
-  
-    if (!form) {
-      console.error("❌ Contact form not found!");
-      return;
-    }
-  
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-  
-      // Get form values
-      const name = document.getElementById("name").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const message = document.getElementById("message").value.trim();
-  
-      if (!name || !email || !message) {
-        alert("⚠️ Please fill in all fields.");
-        return;
+  // Scroll animation for sections & cards
+  const elements = document.querySelectorAll("section, .card");
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("show"); // Add the show class from CSS
+        observer.unobserve(entry.target);   // Animate only once
       }
-  
-      try {
-        // Send data to backend
-        const response = await fetch("http://localhost:5000/contact", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ name, email, message }),
+    });
+  }, { threshold: 0.2 });
+
+  elements.forEach(el => observer.observe(el));
+
+  // Smooth scroll for nav links
+  const navLinks = document.querySelectorAll("nav a[href^='#']");
+  navLinks.forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const targetId = link.getAttribute("href").substring(1);
+      const targetEl = document.getElementById(targetId);
+
+      if (targetEl) {
+        window.scrollTo({
+          top: targetEl.offsetTop - 60, // adjust offset for sticky header
+          behavior: "smooth"
         });
-  
-        const data = await response.json();
-  
-        if (data.success) {
-          alert("✅ " + data.success);
-          form.reset(); // clear form after success
-        } else {
-          alert("❌ " + (data.error || "Something went wrong."));
-        }
-      } catch (err) {
-        console.error("Error:", err);
-        alert("⚠️ Could not connect to server.");
       }
     });
   });
-  
+
+  // Optional: Typing text effect (hero section)
+  const typingTarget = document.querySelector(".typing-text");
+  if (typingTarget) {
+    const texts = ["Developer", "Designer", "Creator"];
+    let textIndex = 0;
+    let charIndex = 0;
+
+    function typeEffect() {
+      if (charIndex < texts[textIndex].length) {
+        typingTarget.textContent += texts[textIndex].charAt(charIndex);
+        charIndex++;
+        setTimeout(typeEffect, 100);
+      } else {
+        setTimeout(eraseEffect, 1500);
+      }
+    }
+
+    function eraseEffect() {
+      if (charIndex > 0) {
+        typingTarget.textContent = texts[textIndex].substring(0, charIndex - 1);
+        charIndex--;
+        setTimeout(eraseEffect, 60);
+      } else {
+        textIndex = (textIndex + 1) % texts.length;
+        setTimeout(typeEffect, 500);
+      }
+    }
+
+    typeEffect();
+  }
+});
